@@ -261,4 +261,73 @@ public class JadxSessionManager {
         targetField.getFieldNode().getFieldInfo().setAlias(newName);
         cls.unload();
     }
+
+    public String getResource(String sessionId, String resourcePath) {
+        JadxDecompiler jadx = getSession(sessionId);
+        for (jadx.api.ResourceFile res : jadx.getResources()) {
+            if (resourcePath.equals(res.getOriginalName())) {
+                jadx.core.xmlgen.ResContainer rc = res.loadContent();
+                if (rc != null && rc.getText() != null) {
+                    return rc.getText().getCodeStr();
+                }
+                return "Resource found, but no text content available.";
+            }
+        }
+        throw new IllegalArgumentException("Resource not found: " + resourcePath);
+    }
+
+    public List<String> searchXml(String sessionId, String searchString, boolean exactMatch, boolean caseSensitive, boolean xmlOnly) {
+        JadxDecompiler jadx = getSession(sessionId);
+        List<String> results = new java.util.ArrayList<>();
+        String query = caseSensitive ? searchString : searchString.toLowerCase();
+
+        for (jadx.api.ResourceFile res : jadx.getResources()) {
+            String name = res.getOriginalName();
+            if (xmlOnly && name != null && !name.toLowerCase().endsWith(".xml")) {
+                continue;
+            }
+            try {
+                jadx.core.xmlgen.ResContainer rc = res.loadContent();
+                traverseResContainerForSearch(rc, name, query, exactMatch, caseSensitive, results);
+            } catch (Exception e) {
+                // Ignore decoding errors for individual resources
+            }
+        }
+        return results;
+    }
+
+    private void traverseResContainerForSearch(jadx.core.xmlgen.ResContainer rc, String currentPath, String query, boolean exactMatch, boolean caseSensitive, List<String> results) {
+        if (rc == null) return;
+        jadx.core.xmlgen.ResContainer.DataType type = rc.getDataType();
+        if (type == jadx.core.xmlgen.ResContainer.DataType.TEXT || type == jadx.core.xmlgen.ResContainer.DataType.RES_TABLE) {
+            jadx.api.ICodeInfo textInfo = rc.getText();
+            if (textInfo != null) {
+                String text = textInfo.getCodeStr();
+                if (text != null) {
+                    String[] lines = text.split("\\r?\\n");
+                    for (int i = 0; i < lines.length; i++) {
+                        String line = lines[i];
+                        boolean match = false;
+                        if (exactMatch) {
+                            match = caseSensitive ? line.equals(query) : line.equalsIgnoreCase(query);
+                        } else {
+                            match = caseSensitive ? line.contains(query) : line.toLowerCase().contains(query);
+                        }
+                        if (match) {
+                            results.add(currentPath + ":" + (i + 1) + ": " + line.trim());
+                        }
+                    }
+                }
+            }
+        }
+        if (rc.getSubFiles() != null) {
+            for (jadx.core.xmlgen.ResContainer sub : rc.getSubFiles()) {
+                String subPath = currentPath;
+                if (sub.getName() != null && !sub.getName().isEmpty()) {
+                    subPath = currentPath + " -> " + sub.getName();
+                }
+                traverseResContainerForSearch(sub, subPath, query, exactMatch, caseSensitive, results);
+            }
+        }
+    }
 }

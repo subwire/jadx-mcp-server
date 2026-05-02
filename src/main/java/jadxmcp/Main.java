@@ -322,6 +322,63 @@ public class Main {
                 )
                 .tool(
                     Tool.builder()
+                        .name("search_xml")
+                        .description("Search for a string across all decompiled resources (e.g. AndroidManifest, layouts, strings).")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "search_string", Map.of("type", "string", "description", "The string to search for"),
+                                "exact_match", Map.of("type", "boolean", "description", "Whether to match exactly (default: false)"),
+                                "case_sensitive", Map.of("type", "boolean", "description", "Case sensitive search (default: false)"),
+                                "xml_only", Map.of("type", "boolean", "description", "Restrict search to .xml files only (default: false)")
+                            ),
+                            List.of("session_id", "search_string"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String searchString = (String) arguments.get("search_string");
+                        boolean exactMatch = arguments.containsKey("exact_match") ? (Boolean) arguments.get("exact_match") : false;
+                        boolean caseSensitive = arguments.containsKey("case_sensitive") ? (Boolean) arguments.get("case_sensitive") : false;
+                        boolean xmlOnly = arguments.containsKey("xml_only") ? (Boolean) arguments.get("xml_only") : false;
+                        try {
+                            List<String> results = sessionManager.searchXml(sessionId, searchString, exactMatch, caseSensitive, xmlOnly);
+                            String res = String.join("\n", results);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No matches found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("get_resource")
+                        .description("Get the full decompiled text content of a specific resource file (e.g. res/layout/main.xml)")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "resource_path", Map.of("type", "string", "description", "The original resource path")
+                            ),
+                            List.of("session_id", "resource_path"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String resourcePath = (String) arguments.get("resource_path");
+                        try {
+                            String code = sessionManager.getResource(sessionId, resourcePath);
+                            return new CallToolResult(List.of(new TextContent(code)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
                         .name("close_session")
                         .description("Close a JADX session and free memory")
                         .inputSchema(new JsonSchema(
