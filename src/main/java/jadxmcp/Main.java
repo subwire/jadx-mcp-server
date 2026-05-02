@@ -153,6 +153,90 @@ public class Main {
                 )
                 .tool(
                     Tool.builder()
+                        .name("search_strings")
+                        .description("Search for a string across all decompiled code (AST instructions)")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "search_string", Map.of("type", "string", "description", "The string to search for"),
+                                "exact_match", Map.of("type", "boolean", "description", "Whether to match the string exactly (default: false)"),
+                                "case_sensitive", Map.of("type", "boolean", "description", "Whether the search should be case sensitive (default: true)")
+                            ),
+                            List.of("session_id", "search_string"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String searchString = (String) arguments.get("search_string");
+                        boolean exactMatch = arguments.containsKey("exact_match") ? (Boolean) arguments.get("exact_match") : false;
+                        boolean caseSensitive = arguments.containsKey("case_sensitive") ? (Boolean) arguments.get("case_sensitive") : true;
+                        try {
+                            List<String> results = sessionManager.searchStrings(sessionId, searchString, exactMatch, caseSensitive);
+                            String res = String.join("\n", results);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No matches found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("get_class_xrefs")
+                        .description("Find all cross-references (usages) of a specific class")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name")
+                            ),
+                            List.of("session_id", "class_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        try {
+                            List<String> usages = sessionManager.getClassXrefs(sessionId, className);
+                            String res = String.join("\n", usages);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No cross-references found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("get_method_xrefs")
+                        .description("Find all cross-references (usages) of a specific method")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name"),
+                                "method_name", Map.of("type", "string", "description", "Method name")
+                            ),
+                            List.of("session_id", "class_name", "method_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        String methodName = (String) arguments.get("method_name");
+                        try {
+                            List<String> usages = sessionManager.getMethodXrefs(sessionId, className, methodName);
+                            String res = String.join("\n", usages);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No cross-references found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
                         .name("close_session")
                         .description("Close a JADX session and free memory")
                         .inputSchema(new JsonSchema(

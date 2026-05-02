@@ -14,12 +14,14 @@ This server exposes JADX's powerful reverse engineering and decompilation capabi
   - `list_classes`: Retrieve a list of all fully-qualified class names, with optional package filtering.
   - `get_class_source`: Fetch the complete decompiled Java source code for a specific class.
   - `get_method_source`: Extract the decompiled Java source code for a specific method, saving context window space.
+  - `search_strings`: Global string search across the decompiled AST instructions (supports exact match and case sensitivity).
+  - `get_class_xrefs`: Find all cross-references (usages) of a specific class.
+  - `get_method_xrefs`: Find all cross-references (usages) of a specific method.
   - `close_session`: Safely close a session and free up memory.
 
 ### TODO Features
 - [ ] **Project File Support**: Automatically load and save `.jadx` project files to persist renames, bookmarks, and comments between sessions.
-- [ ] **Cross-references (X-Refs)**: Tools to find where methods and classes are called.
-- [ ] **String Search**: Global string searching across the application.
+- [ ] **XML Resource Search**: Separate string search pass for Android XML resources.
 - [ ] **Deobfuscation Tools**: Endpoints to let the agent dynamically rename classes, fields, and methods in the AST.
 
 ## Requirements
