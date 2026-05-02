@@ -237,6 +237,91 @@ public class Main {
                 )
                 .tool(
                     Tool.builder()
+                        .name("rename_class")
+                        .description("Rename a class (deobfuscation). Source will reflect the new name.")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Current fully qualified class name or original name"),
+                                "new_name", Map.of("type", "string", "description", "New class name")
+                            ),
+                            List.of("session_id", "class_name", "new_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        String newName = (String) arguments.get("new_name");
+                        try {
+                            sessionManager.renameClass(sessionId, className, newName);
+                            return new CallToolResult(List.of(new TextContent("Class renamed to: " + newName)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("rename_method")
+                        .description("Rename a method (deobfuscation). Source will reflect the new name.")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name"),
+                                "method_name", Map.of("type", "string", "description", "Current method name or original name"),
+                                "new_name", Map.of("type", "string", "description", "New method name")
+                            ),
+                            List.of("session_id", "class_name", "method_name", "new_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        String methodName = (String) arguments.get("method_name");
+                        String newName = (String) arguments.get("new_name");
+                        try {
+                            sessionManager.renameMethod(sessionId, className, methodName, newName);
+                            return new CallToolResult(List.of(new TextContent("Method renamed to: " + newName)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("rename_field")
+                        .description("Rename a field (deobfuscation). Source will reflect the new name.")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name"),
+                                "field_name", Map.of("type", "string", "description", "Current field name or original name"),
+                                "new_name", Map.of("type", "string", "description", "New field name")
+                            ),
+                            List.of("session_id", "class_name", "field_name", "new_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        String fieldName = (String) arguments.get("field_name");
+                        String newName = (String) arguments.get("new_name");
+                        try {
+                            sessionManager.renameField(sessionId, className, fieldName, newName);
+                            return new CallToolResult(List.of(new TextContent("Field renamed to: " + newName)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
                         .name("close_session")
                         .description("Close a JADX session and free memory")
                         .inputSchema(new JsonSchema(

@@ -183,4 +183,82 @@ public class JadxSessionManager {
         }
         return results.stream().distinct().collect(Collectors.toList());
     }
+
+    public void renameClass(String sessionId, String className, String newName) {
+        if (className.startsWith("java.")) {
+            throw new IllegalArgumentException("Cannot rename java.* classes");
+        }
+        JadxDecompiler jadx = getSession(sessionId);
+        JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
+        if (cls == null) {
+            cls = jadx.searchJavaClassByAliasFullName(className);
+        }
+        if (cls == null) {
+            throw new IllegalArgumentException("Class not found: " + className);
+        }
+        
+        jadx.core.dex.info.ClassInfo classInfo = cls.getClassNode().getClassInfo();
+        if (newName.contains(".")) {
+            classInfo.changePkgAndName(
+                newName.substring(0, newName.lastIndexOf('.')),
+                newName.substring(newName.lastIndexOf('.') + 1)
+            );
+        } else {
+            classInfo.changeShortName(newName);
+        }
+        
+        cls.unload();
+    }
+
+    public void renameMethod(String sessionId, String className, String methodName, String newName) {
+        JadxDecompiler jadx = getSession(sessionId);
+        JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
+        if (cls == null) {
+            cls = jadx.searchJavaClassByAliasFullName(className);
+        }
+        if (cls == null) {
+            throw new IllegalArgumentException("Class not found: " + className);
+        }
+        
+        jadx.api.JavaMethod targetMethod = null;
+        for (jadx.api.JavaMethod m : cls.getMethods()) {
+            jadx.core.dex.info.MethodInfo info = m.getMethodNode().getMethodInfo();
+            if (info.getName().equals(methodName) || info.getAlias().equals(methodName)) {
+                targetMethod = m;
+                break;
+            }
+        }
+        if (targetMethod == null) {
+            throw new IllegalArgumentException("Method not found: " + methodName + " in class " + className);
+        }
+        
+        targetMethod.getMethodNode().getMethodInfo().setAlias(newName);
+        cls.unload();
+    }
+
+    public void renameField(String sessionId, String className, String fieldName, String newName) {
+        JadxDecompiler jadx = getSession(sessionId);
+        JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
+        if (cls == null) {
+            cls = jadx.searchJavaClassByAliasFullName(className);
+        }
+        if (cls == null) {
+            throw new IllegalArgumentException("Class not found: " + className);
+        }
+        
+        jadx.api.JavaField targetField = null;
+        for (jadx.api.JavaField f : cls.getFields()) {
+            jadx.core.dex.info.FieldInfo info = f.getFieldNode().getFieldInfo();
+            if (info.getName().equals(fieldName) || info.getAlias().equals(fieldName)) {
+                targetField = f;
+                break;
+            }
+        }
+        if (targetField == null) {
+            throw new IllegalArgumentException("Field not found: " + fieldName + " in class " + className);
+        }
+        
+        targetField.getFieldNode().getFieldInfo().setAlias(newName);
+        cls.unload();
+    }
 }

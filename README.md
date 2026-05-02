@@ -17,12 +17,12 @@ This server exposes JADX's powerful reverse engineering and decompilation capabi
   - `search_strings`: Global string search across the decompiled AST instructions (supports exact match and case sensitivity).
   - `get_class_xrefs`: Find all cross-references (usages) of a specific class.
   - `get_method_xrefs`: Find all cross-references (usages) of a specific method.
+  - `rename_class`, `rename_method`, `rename_field`: Deobfuscate code by dynamically renaming classes, methods, and fields. The AST will reflect the new names in subsequent source code retrievals.
   - `close_session`: Safely close a session and free up memory.
 
 ### TODO Features
 - [ ] **Project File Support**: Automatically load and save `.jadx` project files to persist renames, bookmarks, and comments between sessions.
 - [ ] **XML Resource Search**: Separate string search pass for Android XML resources.
-- [ ] **Deobfuscation Tools**: Endpoints to let the agent dynamically rename classes, fields, and methods in the AST.
 
 ## Requirements
 
