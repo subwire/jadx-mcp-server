@@ -52,6 +52,102 @@ public class Main {
                 )
                 .tool(
                     Tool.builder()
+                        .name("list_sessions")
+                        .description("List all active sessions and their loaded input files")
+                        .inputSchema(new JsonSchema("object", Map.of(), List.of(), null, null, null))
+                        .build(),
+                    (exchange, arguments) -> {
+                        try {
+                            Map<String, String> sessions = sessionManager.listSessions();
+                            StringBuilder sb = new StringBuilder();
+                            for (Map.Entry<String, String> entry : sessions.entrySet()) {
+                                sb.append(entry.getKey()).append(" -> ").append(entry.getValue()).append("\n");
+                            }
+                            String res = sb.toString();
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No active sessions." : res.trim())), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("list_methods")
+                        .description("List all methods (with signatures) in a class")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name")
+                            ),
+                            List.of("session_id", "class_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        try {
+                            List<String> methods = sessionManager.listMethods(sessionId, className);
+                            String res = String.join("\n", methods);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No methods found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("list_fields")
+                        .description("List all fields (with types) in a class")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID"),
+                                "class_name", Map.of("type", "string", "description", "Fully qualified class name")
+                            ),
+                            List.of("session_id", "class_name"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        String className = (String) arguments.get("class_name");
+                        try {
+                            List<String> fields = sessionManager.listFields(sessionId, className);
+                            String res = String.join("\n", fields);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No fields found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
+                        .name("list_resources")
+                        .description("List all resource paths available in the loaded session")
+                        .inputSchema(new JsonSchema(
+                            "object",
+                            Map.of(
+                                "session_id", Map.of("type", "string", "description", "The session ID")
+                            ),
+                            List.of("session_id"),
+                            null, null, null
+                        ))
+                        .build(),
+                    (exchange, arguments) -> {
+                        String sessionId = (String) arguments.get("session_id");
+                        try {
+                            List<String> resources = sessionManager.listResources(sessionId);
+                            String res = String.join("\n", resources);
+                            return new CallToolResult(List.of(new TextContent(res.isEmpty() ? "No resources found." : res)), false);
+                        } catch (Exception e) {
+                            return new CallToolResult(List.of(new TextContent("Error: " + e.getMessage())), true);
+                        }
+                    }
+                )
+                .tool(
+                    Tool.builder()
                         .name("list_classes")
                         .description("List all decompiled classes in the session")
                         .inputSchema(new JsonSchema(

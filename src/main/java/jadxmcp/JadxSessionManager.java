@@ -49,6 +49,54 @@ public class JadxSessionManager {
         }
     }
     
+    public Map<String, String> listSessions() {
+        Map<String, String> result = new java.util.HashMap<>();
+        for (Map.Entry<String, JadxDecompiler> entry : sessions.entrySet()) {
+            String inputFiles = entry.getValue().getArgs().getInputFiles().stream()
+                .map(File::getName)
+                .collect(Collectors.joining(", "));
+            result.put(entry.getKey(), inputFiles);
+        }
+        return result;
+    }
+
+    public List<String> listMethods(String sessionId, String className) {
+        JadxDecompiler jadx = getSession(sessionId);
+        JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
+        if (cls == null) cls = jadx.searchJavaClassByAliasFullName(className);
+        if (cls == null) throw new IllegalArgumentException("Class not found: " + className);
+        
+        return cls.getMethods().stream()
+            .map(m -> {
+                jadx.core.dex.info.MethodInfo info = m.getMethodNode().getMethodInfo();
+                return m.getName() + "(" + info.getArgumentsTypes().stream().map(Object::toString).collect(Collectors.joining(", ")) + ") : " + info.getReturnType().toString();
+            })
+            .collect(Collectors.toList());
+    }
+
+    public List<String> listFields(String sessionId, String className) {
+        JadxDecompiler jadx = getSession(sessionId);
+        JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
+        if (cls == null) cls = jadx.searchJavaClassByAliasFullName(className);
+        if (cls == null) throw new IllegalArgumentException("Class not found: " + className);
+        
+        return cls.getFields().stream()
+            .map(f -> {
+                jadx.core.dex.info.FieldInfo info = f.getFieldNode().getFieldInfo();
+                return info.getType().toString() + " " + f.getName();
+            })
+            .collect(Collectors.toList());
+    }
+
+    public List<String> listResources(String sessionId) {
+        JadxDecompiler jadx = getSession(sessionId);
+        return jadx.getResources().stream()
+            .map(ResourceFile::getOriginalName)
+            .distinct()
+            .collect(Collectors.toList());
+    }
+
+    
     public String getClassSource(String sessionId, String className) {
         JadxDecompiler jadx = getSession(sessionId);
         JavaClass cls = jadx.searchJavaClassByOrigFullName(className);
