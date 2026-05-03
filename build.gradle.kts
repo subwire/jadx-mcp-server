@@ -13,6 +13,10 @@ dependencies {
     implementation("io.modelcontextprotocol.sdk:mcp:0.17.1")
     implementation("org.slf4j:slf4j-simple:2.0.12")
     runtimeOnly("io.github.skylot:jadx-dex-input:1.5.5")
+    runtimeOnly("io.github.skylot:jadx-java-input:1.5.5")
+    runtimeOnly("io.github.skylot:jadx-smali-input:1.5.5")
+    runtimeOnly("io.github.skylot:jadx-aab-input:1.5.5")
+    runtimeOnly("io.github.skylot:jadx-xapk-input:1.5.5")
 }
 
 application {
